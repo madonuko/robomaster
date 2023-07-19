@@ -21,6 +21,7 @@ OP_MAP = {
 	23: '//'
 }
 
+
 def getMarkerID():
 	list_Cache = []
 	list_Maker_ID_Data = []
@@ -28,30 +29,20 @@ def getMarkerID():
 	vision_ctrl.enable_detection(rm_define.vision_detection_marker)
 	vision_ctrl.marker_detection_color_set(rm_define.marker_detection_color_red)
 	while not len(list_Cache) == 26:
-        list_Cache=RmList(vision_ctrl.get_marker_detection_info())
+		list_Cache = RmList(vision_ctrl.get_marker_detection_info())
 	variable_Sequence = 2
 	while not variable_Sequence > 22:
-    	list_Maker_ID_Data.append(list_Cache[variable_Sequence])
-    	variable_Sequence = variable_Sequence + 5
+		list_Maker_ID_Data.append(list_Cache[variable_Sequence])
+		variable_Sequence = variable_Sequence + 5
 	return list_Maker_ID_Data
 
-def getMinimum(detected):
-	val = 40
-
-    for L in detected:
-        if L < val:
-            val = L
-    del detected[detected.index(val)]
-    return val
-
-found = []
 
 def _h24(prevs, arr, ops):
 	global found
 	for i, op in enumerate(set(ops)):
 		op = OP_MAP[op]
 		for i, a in enumerate(arr):
-			new = f'{prevs}+{a}'
+			new = f'{prevs}{op}{a}'
 			if eval(new) == 24:
 				found = new
 				return True
@@ -66,6 +57,7 @@ def _h24(prevs, arr, ops):
 			return True
 	return False
 
+
 def sort_h24(detected):
 	ops = [x for x in detected if x >= 20]
 	nums = [x - 10 for x in detected if x != 20]
@@ -76,6 +68,7 @@ def sort_h24(detected):
 		print("oops, no h24 found")
 		exit()
 	return found
+
 
 def start():
 	global table
