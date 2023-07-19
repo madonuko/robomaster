@@ -8,7 +8,17 @@ table = {
 	17: rm_define.marker_number_seven,
 	18: rm_define.marker_number_eight,
 	19: rm_define.marker_number_nine,
-	20: rm_define.IDK_MAYBE_ADDITION
+	20: rm_define.IDK_MAYBE_ADD,
+	21: rm_define.IDK_MAYBE_SUB,
+	22: rm_define.IDK_MAYBE_MUL,
+	23:	rm_deifne.IDK_MAYBE_DIV,
+}
+
+OP_MAP = {
+	20: '+',
+	21: '-',
+	22: '*',
+	23: '//'
 }
 
 def getMarkerID():
@@ -38,17 +48,15 @@ found = []
 
 def _h24(prevs, arr, ops):
 	global found
-	for i, op in enumerate(ops):
-		if op == 20: # add
-			for i, a in enumerate(arr):
-				new = f'{prevs}+{a}'
-				if eval(new) == 24:
-					found = new
-					return True
-				if _h24(new, arr[:i] + arr[i+1:], ops[:i] + ops[i+1:]):
-					return True
-		# elif here ...
-		# last resort?
+	for i, op in enumerate(set(ops)):
+		op = OP_MAP[op]
+		for i, a in enumerate(arr):
+			new = f'{prevs}+{a}'
+			if eval(new) == 24:
+				found = new
+				return True
+			if _h24(new, arr[:i] + arr[i+1:], ops[:i] + ops[i+1:]):
+				return True
 	for i, a in enumerate(arr):
 		new = f'{prevs}{a}'
 		if eval(new) == 24:
