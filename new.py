@@ -117,8 +117,10 @@ def get_marker_infos(num: int = -1):
     result = []
     retrive = {}
     markers = []
-    while len(result) != (1 + num * 5):
+    while True:
         result = vision_ctrl.get_marker_detection_info()
+        if len(result) == (1 + num * 5):
+            break
         print("fail: only " + str((len(result) - 1)/5) + " tags detected")
     i = 0
     markers = []
