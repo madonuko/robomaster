@@ -180,31 +180,24 @@ def start():
     global table
     found = []
     res = get_marker_infos(5)
-    print("1")
+    print("detect_marker_and_aim")
     vision_ctrl.detect_marker_and_aim(result_position[2])
-    print("2")
+    print("get_marker_infos")
     res = get_marker_infos(5)
-    print(res)
-    print(result_position)
+    print(f"{res=}\n{result_position=}")
     distance = res[result_position[2]][2] * -110.7726 + 67.539
     print("4")
     gimbal_ctrl.angle_ctrl(0,0)
     res = get_marker_infos(5)
     seq = sort_h24(res)
-    #res = get_marker_infos(5)
-    #print("point a")
-    #a = sort_h24(res)
-    print("a")
-    if not seq:
-        res = get_marker_infos(5)
-        seq = sort_h24(res)
+    print(f"h24: {seq=}")
     #print("point b")
     #vision_ctrl.detect_marker_and_aim(result_position[2])
     #print("point c")
     #distance = res[result_position[2]][2] * -110.7726 + 67.539
     #gimbal_ctrl.angle_ctrl(0,0)
     for i in seq:
-        print(i)
+        print(f"shoot_energy: {i}")
         shoot_energy(result_position.index(OP_REV_MAP[i]))
-    print(seq)
-    print(get_marker_infos(5))
+    # print(seq)
+    # print(get_marker_infos(5))
