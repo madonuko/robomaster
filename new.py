@@ -49,7 +49,9 @@ def eval(tokens):
         if token == '*':
             return eval(tokens[:i-1] + [tokens[i-1]*tokens[i+1]] + tokens[i+2:])
         if token == '/':
-            return eval(tokens[:i-1] + [tokens[i-1]//tokens[i+1]] + tokens[i+2:])
+            if tokens[i-1] % tokens[i+1] == 0:
+                return eval(tokens[:i-1] + [tokens[i-1]//tokens[i+1]] + tokens[i+2:])
+            return 0
         i += 1
     i = 0
     for token in tokens:
@@ -60,29 +62,25 @@ def eval(tokens):
         i += 1
 
 
-
 def set(a):
     new = []
-    i = 0
     for x in a:
-        if a.index(x) == i:
+        if x not in new:
             new.append(x)
-        i += 1
     return new
 
-def _h24(prevs, arr, ops):
+def _h24(prevs, arr):
+    global ops
     global found
     x = 0
-    for op in set(ops):
-        op = OP_MAP[op]
-
+    for op in ops:
         i = 0
         for a in arr:
             new = prevs + [op, a]
             if eval(new) == 24:
                 found = new
                 return True
-            if _h24(new, arr[:i] + arr[i+1:], ops):
+            if _h24(new, arr[:i] + arr[i+1:]):
                 return True
             i += 1
         x += 1
@@ -93,28 +91,27 @@ def _h24(prevs, arr, ops):
         if eval(new) == 24:
             found = new
             return True
-        if _h24(new, arr[:i] + arr[i+1:], ops):
+        if _h24(new, arr[:i] + arr[i+1:]):
             return True
         i += 1
     return False
 
 
 def sort_h24(detected):
-    ops = [x for x in detected if x >= 20]
+    global ops
+    global found
+    ops = [OP_MAP[x] for x in detected if x >= 20]
     nums = [x - 10 for x in detected if x <= 20]
     i = 0
     for n in nums:
-        if _h24([n], nums[:i] + nums[i+1:], ops):
+        if _h24([n], nums[:i] + nums[i+1:]):
             break
         i += 1
-    if found == []:
-        print("oops, no h24 found")
-        result = get_marker_infos(5)
-        return sort_h24(result)
-    res = ""
-    for token in found:
-        res += str(token)
-    return res
+    if found != []:
+        return [str(token) for token in found]
+    print("oops, no h24 found")
+    return sort_h24(get_marker_infos(5))
+
 
 def get_marker_infos(num: int = -1):
     result = []
