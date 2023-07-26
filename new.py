@@ -1,3 +1,150 @@
+def init_r():
+    robot_ctrl.set_mode(rm_define.robot_mode_free)
+    vision_ctrl.enable_detection(rm_define.vision_detection_marker)
+    vision_ctrl.set_marker_detection_distance(3)
+    vision_ctrl.marker_detection_color_set(rm_define.marker_detection_color_red)
+    gun_ctrl.set_fire_count(1)
+    gimbal_ctrl.set_rotate_speed(540)
+
+def init_b():
+    robot_ctrl.set_mode(rm_define.robot_mode_free)
+    vision_ctrl.enable_detection(rm_define.vision_detection_marker)
+    vision_ctrl.set_marker_detection_distance(3)
+    vision_ctrl.marker_detection_color_set(rm_define.marker_detection_color_blue)
+    gun_ctrl.set_fire_count(1)
+    gimbal_ctrl.set_rotate_speed(540)
+
+result_position = []
+
+OP_MAP = {
+    50: '+',
+    52: '/',
+    43: '*',
+    51: '-'
+}
+
+OP_REV_MAP = {
+    '1': 11,
+    '2': 12,
+    '3': 13,
+    '4': 14,
+    '5': 15,
+    '6': 16,
+    '7': 17,
+    '8': 18,
+    '9': 19,
+    '0': 10,
+    '+': 50,
+    '/': 52,
+    '*': 43,
+    '-': 51,
+}
+
+
+def eval(tokens):
+    if len(tokens) == 1:
+        return int(tokens[0])
+    i = 0
+    for token in tokens:
+        if token == '*':
+            return eval(tokens[:i-1] + [tokens[i-1]*tokens[i+1]] + tokens[i+2:])
+        if token == '/':
+            return eval(tokens[:i-1] + [tokens[i-1]//tokens[i+1]] + tokens[i+2:])
+        i += 1
+    i = 0
+    for token in tokens:
+        if token == '+':
+            return eval(tokens[:i-1] + [tokens[i-1]+tokens[i+1]] + tokens[i+2:])
+        if token == '-':
+            return eval(tokens[:i-1] + [tokens[i-1]-tokens[i+1]] + tokens[i+2:])
+        i += 1
+
+
+
+def set(a):
+    new = []
+    i = 0
+    for x in a:
+        if a.index(x) == i:
+            new.append(x)
+        i += 1
+    return new
+
+def _h24(prevs, arr, ops):
+    global found
+    x = 0
+    for op in set(ops):
+        op = OP_MAP[op]
+
+        i = 0
+        for a in arr:
+            new = prevs + [op, a]
+            if eval(new) == 24:
+                found = new
+                return True
+            if _h24(new, arr[:i] + arr[i+1:], ops):
+                return True
+            i += 1
+        x += 1
+    i = 0
+    for a in arr:
+        new = prevs[:]
+        new[-1] = prevs[-1]*10+a
+        if eval(new) == 24:
+            found = new
+            return True
+        if _h24(new, arr[:i] + arr[i+1:], ops):
+            return True
+        i += 1
+    return False
+
+
+def sort_h24(detected):
+    ops = [x for x in detected if x >= 20]
+    nums = [x - 10 for x in detected if x <= 20]
+    i = 0
+    for n in nums:
+        if _h24([n], nums[:i] + nums[i+1:], ops):
+            break
+        i += 1
+    if found == []:
+        print("oops, no h24 found")
+        result = get_marker_infos(5)
+        return sort_h24(result)
+    res = ""
+    for token in found:
+        res += str(token)
+    return res
+
+def get_marker_infos(num: int = -1):
+    result = []
+    retrive = {}
+    markers = []
+    while len(result) != (1 + num * 5):
+        result = vision_ctrl.get_marker_detection_info()
+        print("fail: only " + str((len(result) - 1)/5) + " tags detected")
+    i = 0
+    markers = []
+    while i != num:
+        retrive[result[1 + i * 5]] = [result[2 + i * 5], result[3 + i * 5], result[4 + i * 5], result[5 + i * 5]]
+        markers.append(result[1 + i * 5])
+        i= i + 1
+    global result_position
+    i = 0
+    result_position = []
+    while i != num:
+        i = i + 1
+        cache_id = 0
+        cache_value = 0
+        for k in markers:
+            if cache_value < retrive[k][0]:
+                cache_id = k
+                cache_value = retrive[k][0]
+        result_position.append(cache_id)
+        del markers[markers.index(cache_id)]
+    return retrive
+
+def getMarkerID():
     list_Cache = []
     list_Maker_ID_Data = []
     variable_Sequence = 0
@@ -24,7 +171,7 @@ def shoot_energy(ID: int = -1):
     time.sleep(0.1)
     gun_ctrl.fire_once()
     time.sleep(0.1)
-​
+
 def start():
     print("point -z")
     init_r()
@@ -50,3 +197,15 @@ def start():
     #a = sort_h24(res)
     print("a")
     if not seq:
+        res = get_marker_infos(5)
+        seq = sort_h24(res)
+    #print("point b")
+    #vision_ctrl.detect_marker_and_aim(result_position[2])
+    #print("point c")
+    #distance = res[result_position[2]][2] * -110.7726 + 67.539
+    #gimbal_ctrl.angle_ctrl(0,0)
+    for i in seq:
+        print(i)
+        shoot_energy(result_position.index(OP_REV_MAP[i]))
+    print(seq)
+    print(get_marker_infos(5))
